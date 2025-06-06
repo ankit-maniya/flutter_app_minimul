@@ -90,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initAppWrite(awConfig);
 
-    _checkSessions().then((session) async{
+    _checkSessions().then((session) async {
       if (session.isEmpty) {
         // if session is empty then call to perfom login
         loginWithEmailPassword().then((session) async {
@@ -108,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         });
       } else {
-         await _onFetchTeams();
+        await _onFetchTeams();
       }
     });
   }
@@ -200,6 +200,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _onFetchTeams() async {
+    if (_userSessionInfo.isEmpty) {
+      setState(() {
+        _loading = false;
+      });
+      return;
+    }
+
     try {
       Reply_Team_List teams = await getUserGroups();
       setState(() {
