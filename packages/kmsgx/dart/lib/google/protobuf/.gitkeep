@@ -1,0 +1,8 @@
+# Why?
+Git can't push empty directories [https://archive.kernel.org/oldwiki/git.wiki.kernel.org/index.php/Git_FAQ.html#Can_I_add_empty_directories.3F]. 
+It can only track files.
+
+Since we want the `/lib/google/protobuf` folder to be present in Git even when it's empty, this ensures its availability when adding it as a submodule.
+
+# see more about this file
+What is .gitkeep? [https://www.freecodecamp.org/news/what-is-gitkeep/]
