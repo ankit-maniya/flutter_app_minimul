@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/enums.dart';
 import 'package:appwrite/models.dart';
@@ -222,9 +224,19 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Uint8List?> sendByteData(Uint8List byteData) async {
     Uint8List? responseData;
 
-    // execute the function with the provided byte data
-    // and return the response in byte data
-    // execute for '/kmsgx' in backend cloud function
+    // Execute the function with the provided byte data
+    // and return the response as byte data.
+    //
+    // To send base64-encoded data:
+    // - Set Content-Type to 'text/plain'
+    // - Use path: '/kmsgx?type=base64'
+    // - Use body: base64Encode(byteData)
+    //
+    // To send binary data:
+    // - Set Content-Type to 'application/octet-stream'
+    // - Use path: '/kmsgx'
+    // - Use body: String.fromCharCodes(byteData)
+
     await _functions
         .createExecution(
       functionId: _functionId,
@@ -235,17 +247,57 @@ class _MyHomePageState extends State<MyHomePage> {
       method: ExecutionMethod.pOST,
       body: String.fromCharCodes(byteData),
     )
-        .then(
-      (Execution execution) {
-        print('Function executed successfully: ${execution.responseBody}');
-        // if it is not UnAuthorized response then responseData with byte data
-        if (!execution.responseBody.contains('UnAuthorized')) {
-          // codeUnits will return the LIST<int> data
-          responseData = Uint8List.fromList(execution.responseBody.codeUnits);
-        }
+        .then((Execution execution) {
+      print('Function executed successfully: ${execution.responseBody}');
+
+      if (!execution.responseBody.contains('UnAuthorized')) {
+        // When sending binary data, use the following instead:
+        responseData = Uint8List.fromList(execution.responseBody.codeUnits);
+      }
+    }).onError((error, stackTrace) {
+      print("Error occurred:\n$error\n$stackTrace");
+    });
+
+    return responseData;
+  }
+
+  Future<Uint8List?> sendBase64Data(Uint8List byteData) async {
+    Uint8List? responseData;
+
+    // Execute the function with the provided byte data
+    // and return the response as byte data.
+    //
+    // To send base64-encoded data:
+    // - Set Content-Type to 'text/plain'
+    // - Use path: '/kmsgx?type=base64'
+    // - Use body: base64Encode(byteData)
+    //
+    // To send binary data:
+    // - Set Content-Type to 'application/octet-stream'
+    // - Use path: '/kmsgx'
+    // - Use body: String.fromCharCodes(byteData)
+
+    await _functions
+        .createExecution(
+      functionId: _functionId,
+      headers: {
+        'Content-Type':
+            'text/plain', // Use 'application/octet-stream' for binary data
       },
-    ).onError((error, stackTrace) {
-      print("error, stackTrace :: \n$error, \n $stackTrace");
+      path: '/kmsgx?type=base64', // Use '/kmsgx' for binary data
+      method: ExecutionMethod.pOST,
+      body: base64Encode(
+          byteData), // Use String.fromCharCodes(byteData) for binary data
+    )
+        .then((Execution execution) {
+      print('Function executed successfully: ${execution.responseBody}');
+
+      if (!execution.responseBody.contains('UnAuthorized')) {
+        // When sending base64 data, the response is also base64-encoded
+        responseData = base64Decode(execution.responseBody);
+      }
+    }).onError((error, stackTrace) {
+      print("Error occurred:\n$error\n$stackTrace");
     });
 
     return responseData;
